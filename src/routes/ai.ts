@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../lib/prisma'
 import { callGroq, callGroqWithHistory } from '../lib/groq'
+import { buildWhereFromRules } from './segments'
 
 export const aiRouter = Router()
 
@@ -114,6 +115,86 @@ aiRouter.get('/dashboard-insight', async (_req: Request, res: Response) => {
     }
   } catch (err: any) {
     res.json({ insight: 'Keep sending campaigns to unlock deeper AI insights.' })
+  }
+})
+
+// GET /send-time-suggestion — suggest best send time for a segment
+aiRouter.get('/send-time-suggestion', async (req: Request, res: Response) => {
+  const fallback = {
+    day: 'Tuesday',
+    timeRange: 'evening (7–9 PM)',
+    reason: 'Tuesday evenings perform well for fashion brands in India.'
+  }
+  try {
+    const { segmentId } = req.query
+
+    if (!segmentId) {
+      return res.status(400).json({ error: 'segmentId required' })
+    }
+
+    const segment = await prisma.segment.findUnique({ where: { id: segmentId as string } })
+    if (!segment) {
+      return res.status(404).json({ error: 'Segment not found' })
+    }
+
+    const rules = segment.rules as any
+    const where = buildWhereFromRules(rules)
+    const customers = await prisma.customer.findMany({
+      where,
+      include: { orders: { select: { createdAt: true } } },
+      take: 100
+    })
+
+    const allOrders = customers.flatMap((c: any) => c.orders)
+    const totalOrders = allOrders.length
+
+    if (totalOrders < 5) {
+      return res.json({
+        day: 'Tuesday',
+        timeRange: 'evening (7–9 PM)',
+        reason: 'Not enough order data yet. Tuesday evenings perform well for fashion brands in India.'
+      })
+    }
+
+    const dayCounts: Record<number, number> = {}
+    allOrders.forEach((o: any) => {
+      const day = new Date(o.createdAt).getDay()
+      dayCounts[day] = (dayCounts[day] || 0) + 1
+    })
+    const peakDayIndex = Number(Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0][0])
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const peakDay = dayNames[peakDayIndex]
+
+    const hourCounts: Record<number, number> = {}
+    allOrders.forEach((o: any) => {
+      const hour = new Date(o.createdAt).getHours()
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1
+    })
+    const peakHour = Number(Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0][0])
+    const timeRange = peakHour < 12 ? 'morning (9–11 AM)'
+      : peakHour < 17 ? 'afternoon (1–3 PM)'
+      : peakHour < 21 ? 'evening (7–9 PM)'
+      : 'night (8–10 PM)'
+
+    const system = 'You are a CRM send-time optimizer for Indian D2C fashion brands. Given order pattern data, suggest the best time to send a marketing message. Return ONLY JSON with no markdown: { "day": "string", "timeRange": "string", "reason": "string" }. Keep reason under 15 words.'
+    const user = JSON.stringify({
+      peakDay,
+      peakTimeRange: timeRange,
+      segmentName: segment.name,
+      totalOrders,
+      customerCount: customers.length
+    })
+
+    const raw = await callGroq(system, user)
+
+    try {
+      const parsed = JSON.parse(raw)
+      return res.json(parsed)
+    } catch {
+      return res.json({ day: peakDay, timeRange, reason: 'Based on your segment order history.' })
+    }
+  } catch {
+    return res.json(fallback)
   }
 })
 
