@@ -6,7 +6,7 @@ const client = new Groq({
 
 const MODEL = 'llama-3.3-70b-versatile'
 
-export async function callGrok(systemPrompt: string, userMessage: string): Promise<string> {
+export async function callGroq(systemPrompt: string, userMessage: string): Promise<string> {
   if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY not set')
 
   const completion = await client.chat.completions.create({
@@ -22,7 +22,7 @@ export async function callGrok(systemPrompt: string, userMessage: string): Promi
   return completion.choices[0].message.content || ''
 }
 
-export async function callGrokWithHistory(
+export async function callGroqWithHistory(
   systemPrompt: string,
   messages: Array<{ role: string; content: string }>
 ): Promise<string> {

@@ -25,7 +25,7 @@ Both are deployed as separate Railway services from this single repository.
 | Framework | Express |
 | ORM | Prisma |
 | Database | Neon PostgreSQL (serverless) |
-| AI | Grok API (grok-3-mini by xAI) |
+| AI | Groq API |
 | Package manager | Bun |
 | Deploy | Railway (2 services) |
 
@@ -39,7 +39,7 @@ graph TD
     C[CRM Server<br/>Railway :3001] -->|POST /send| S
     S[Channel Stub<br/>Railway :3002] -->|POST /webhook/receipt| C
     C -->|Prisma| D[(Neon PostgreSQL)]
-    C -->|HTTPS| G[Grok API<br/>api.x.ai]
+    C -->|HTTPS| G[Groq API]
 
     style F fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
     style C fill:#ecfdf3,stroke:#12b76a,color:#064e3b
@@ -181,7 +181,7 @@ sequenceDiagram
 |---|---|---|
 | POST | `/api/webhook/receipt` | Receive delivery events from channel stub |
 
-### AI (Grok)
+### AI (Groq)
 | Method | Route | Description |
 |---|---|---|
 | POST | `/api/ai/parse-segment` | NL text → segment rules JSON |
@@ -199,7 +199,7 @@ sequenceDiagram
 | Variable | Required | Where to get it | Example |
 |---|---|---|---|
 | `DATABASE_URL` | Yes | Neon dashboard → Connection string | `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require` |
-| `GROK_API_KEY` | Yes | [console.x.ai](https://console.x.ai) → API Keys | `xai-xxxxxxxxxxxx` |
+| `GROQ_API_KEY` | Yes | Provider API console → API Keys | `groq-xxxxxxxxxxxx` |
 | `CHANNEL_STUB_URL` | Yes | Railway channel-stub service URL | `https://xeno-channel-stub.up.railway.app` |
 | `FRONTEND_URL` | Yes | Vercel frontend URL | `https://xeno-crm-frontend.vercel.app` |
 | `PORT` | No | Set by Railway automatically | `3001` |
@@ -228,7 +228,7 @@ cd channel-stub && bun install && cd ..
 
 # 4. Set up environment
 cp .env.example .env
-# Edit .env — add DATABASE_URL and GROK_API_KEY
+# Edit .env — add DATABASE_URL and GROQ_API_KEY
 
 cp channel-stub/.env.example channel-stub/.env
 # channel-stub/.env is fine as-is for local dev
@@ -270,7 +270,7 @@ Two services deployed from this single repo:
 - Root directory: `/` (leave empty)
 - Build command: `bun install && npx prisma generate && bun run build`
 - Start command: `bun run start`
-- Environment variables: DATABASE_URL, GROK_API_KEY, CHANNEL_STUB_URL, FRONTEND_URL
+- Environment variables: DATABASE_URL, GROQ_API_KEY, CHANNEL_STUB_URL, FRONTEND_URL
 
 **Service 2 — Channel Stub**
 - Root directory: `channel-stub`

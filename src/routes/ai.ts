@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../lib/prisma'
-import { callGrok, callGrokWithHistory } from '../lib/grok'
+import { callGroq, callGroqWithHistory } from '../lib/groq'
 
 export const aiRouter = Router()
 
@@ -16,7 +16,7 @@ aiRouter.post('/parse-segment', async (req: Request, res: Response) => {
     const systemPrompt =
       'Extract CRM segment rules from natural language for an Indian fashion brand. Return ONLY a JSON object with optional fields: lastOrderDays (30, 60, 90, or 180), minSpend (500, 1000, 2000, 5000, or 10000), city (Mumbai, Delhi, Bangalore, Chennai, or Hyderabad), tag (VIP, churned, new, or loyal). No explanation. No markdown. Just JSON.'
 
-    const raw = await callGrok(systemPrompt, text)
+    const raw = await callGroq(systemPrompt, text)
 
     try {
       const rules = JSON.parse(raw.trim())
@@ -40,7 +40,7 @@ aiRouter.post('/draft-message', async (req: Request, res: Response) => {
     const userMessage = `Write 3 ${channel || 'WhatsApp'} messages for segment: "${segmentName || 'customers'}". Tone: ${tone || 'friendly'}. Brand: StyleX Fashion.`
 
     try {
-      const raw = await callGrok(systemPrompt, userMessage)
+      const raw = await callGroq(systemPrompt, userMessage)
       const parsed = JSON.parse(raw.trim())
       res.json(parsed)
     } catch {
@@ -77,7 +77,7 @@ aiRouter.post('/chat', async (req: Request, res: Response) => {
       'You are an AI marketing assistant for StyleX Fashion India. Respond ONLY with JSON: { "reply": "string", "action": { "type": "create_campaign", "segment": { "name": "string", "count": number }, "channel": "whatsapp|sms|email|rcs", "message": "string" } }. Omit action for questions. Max 3 sentences in reply.'
 
     try {
-      const raw = await callGrokWithHistory(systemPrompt, messages)
+      const raw = await callGroqWithHistory(systemPrompt, messages)
       const parsed = JSON.parse(raw.trim())
       res.json(parsed)
     } catch {
@@ -107,7 +107,7 @@ aiRouter.get('/dashboard-insight', async (_req: Request, res: Response) => {
     const userMessage = `Recent campaigns: ${campaigns.map(c => `${c.name} (${c.status}, ${c._count.communications} recipients)`).join(', ')}`
 
     try {
-      const raw = await callGrok(systemPrompt, userMessage)
+      const raw = await callGroq(systemPrompt, userMessage)
       res.json({ insight: raw.trim() })
     } catch {
       res.json({ insight: 'Keep sending campaigns to unlock deeper AI insights.' })
@@ -147,7 +147,7 @@ aiRouter.get('/campaign-insight/:id', async (req: Request, res: Response) => {
       '1-2 sentences on campaign performance with numbers and one next action. Plain text only.'
 
     try {
-      const raw = await callGrok(systemPrompt, statsText)
+      const raw = await callGroq(systemPrompt, statsText)
       res.json({ insight: raw.trim() })
     } catch {
       res.json({ insight: 'Insights will appear as delivery data comes in.' })
