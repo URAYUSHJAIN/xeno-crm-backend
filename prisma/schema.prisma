@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  phone          String?
+  city           String
+  tags           String[]
+  totalSpend     Float           @default(0)
+  lastOrderAt    DateTime?
+  createdAt      DateTime        @default(now())
+  orders         Order[]
+  communications Communication[]
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  customerId String
+  amount     Float
+  items      String[]
+  channel    String   @default("online")
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id])
+}
+
+model Segment {
+  id            String     @id @default(cuid())
+  name          String
+  rules         Json
+  customerCount Int        @default(0)
+  createdAt     DateTime   @default(now())
+  campaigns     Campaign[]
+}
+
+model Campaign {
+  id              String          @id @default(cuid())
+  name            String
+  segmentId       String
+  channel         String
+  messageTemplate String
+  status          String          @default("draft")
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  createdAt       DateTime        @default(now())
+  segment         Segment         @relation(fields: [segmentId], references: [id])
+  communications  Communication[]
+}
+
+model Communication {
+  id           String             @id @default(cuid())
+  campaignId   String
+  customerId   String
+  message      String
+  channel      String
+  status       String             @default("queued")
+  createdAt    DateTime           @default(now())
+  campaign     Campaign           @relation(fields: [campaignId], references: [id])
+  customer     Customer           @relation(fields: [customerId], references: [id])
+  logs         CommunicationLog[]
+}
+
+model CommunicationLog {
+  id              String        @id @default(cuid())
+  communicationId String
+  event           String
+  timestamp       DateTime      @default(now())
+  communication   Communication @relation(fields: [communicationId], references: [id])
+}
