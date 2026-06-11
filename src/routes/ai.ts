@@ -99,7 +99,7 @@ aiRouter.get('/dashboard-insight', async (_req: Request, res: Response) => {
     })
 
     if (campaigns.length === 0) {
-      return res.json({ insight: 'Send your first campaign to unlock AI-powered insights.' })
+      return res.json({ text: 'Send your first campaign to unlock AI-powered insights.' })
     }
 
     const systemPrompt =
@@ -109,12 +109,12 @@ aiRouter.get('/dashboard-insight', async (_req: Request, res: Response) => {
 
     try {
       const raw = await callGroq(systemPrompt, userMessage)
-      res.json({ insight: raw.trim() })
+      res.json({ text: raw.trim() })
     } catch {
-      res.json({ insight: 'Keep sending campaigns to unlock deeper AI insights.' })
+      res.json({ text: 'Keep sending campaigns to unlock deeper AI insights.' })
     }
   } catch (err: any) {
-    res.json({ insight: 'Keep sending campaigns to unlock deeper AI insights.' })
+    res.json({ text: 'Keep sending campaigns to unlock deeper AI insights.' })
   }
 })
 
@@ -229,11 +229,11 @@ aiRouter.get('/campaign-insight/:id', async (req: Request, res: Response) => {
 
     try {
       const raw = await callGroq(systemPrompt, statsText)
-      res.json({ insight: raw.trim() })
+      res.json({ text: raw.trim() })
     } catch {
-      res.json({ insight: 'Insights will appear as delivery data comes in.' })
+      res.json({ text: 'Insights will appear as delivery data comes in.' })
     }
   } catch (err: any) {
-    res.json({ insight: 'Insights will appear as delivery data comes in.' })
+    res.json({ text: 'Insights will appear as delivery data comes in.' })
   }
 })
