@@ -24,7 +24,7 @@ Both are deployed as separate Railway services from this single repository.
 | Runtime | Node.js + TypeScript |
 | Framework | Express |
 | ORM | Prisma |
-| Database | Neon PostgreSQL (serverless) |
+| Database | Supabase PostgreSQL |
 | AI | Groq API |
 | Package manager | Bun |
 | Deploy | Railway (2 services) |
@@ -38,7 +38,7 @@ graph TD
     F[React Frontend<br/>Vercel :5173] -->|REST| C
     C[CRM Server<br/>Railway :3001] -->|POST /send| S
     S[Channel Stub<br/>Railway :3002] -->|POST /webhook/receipt| C
-    C -->|Prisma| D[(Neon PostgreSQL)]
+    C -->|Prisma| D[(Supabase PostgreSQL)]
     C -->|HTTPS| G[Groq API]
 
     style F fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
@@ -198,7 +198,8 @@ sequenceDiagram
 
 | Variable | Required | Where to get it | Example |
 |---|---|---|---|
-| `DATABASE_URL` | Yes | Neon dashboard → Connection string | `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require` |
+| `DATABASE_URL` | Yes | Supabase → Project Settings → Database → Transaction pooler URI | `postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true` |
+| `DIRECT_URL` | Yes | Supabase → Project Settings → Database → Direct connection URI | `postgresql://postgres:[pass]@db.[ref].supabase.co:5432/postgres` |
 | `GROQ_API_KEY` | Yes | Provider API console → API Keys | `groq-xxxxxxxxxxxx` |
 | `CHANNEL_STUB_URL` | Yes | Railway channel-stub service URL | `https://xeno-channel-stub.up.railway.app` |
 | `FRONTEND_URL` | Yes | Vercel frontend URL | `https://xeno-crm-frontend.vercel.app` |

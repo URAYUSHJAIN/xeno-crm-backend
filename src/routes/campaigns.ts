@@ -51,6 +51,11 @@ campaignsRouter.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'name, segmentId, channel, and messageTemplate are required' })
     }
 
+    const segment = await prisma.segment.findUnique({ where: { id: segmentId } })
+    if (!segment) {
+      return res.status(404).json({ error: 'Segment not found. Please select a valid segment.' })
+    }
+
     const campaign = await prisma.campaign.create({
       data: {
         name,
